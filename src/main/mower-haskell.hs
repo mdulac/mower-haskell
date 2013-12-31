@@ -78,10 +78,13 @@ playGame (p:xp) = state (\f ->
 		c = commands p
 		m = mower p
 
+withLineNumber :: [String] -> [(Int, String)]
+withLineNumber = zip [1..]
+
 main = do
 	handle <- openFile "src/resources/commands.txt" ReadMode
 	content <- hGetContents handle
-	let contents = lines $ content
+	print $ withLineNumber $ (lines content)
 
 	let p = mempty
 	let d = North
