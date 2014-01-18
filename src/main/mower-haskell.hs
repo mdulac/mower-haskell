@@ -34,12 +34,12 @@ instance Ord Position where
 	Position (x, y) > Position (x', y') = x > x' || y > y'
 
 turnLeft :: Mower -> Mower
-turnLeft (Mower p West) = Mower p North
-turnLeft m = Mower (position m) $ succ (direction m)
+turnLeft (Mower p North) = Mower p West
+turnLeft m = Mower (position m) $ pred (direction m)
 
 turnRight :: Mower -> Mower
-turnRight (Mower p North) = Mower p West
-turnRight m = Mower (position m) $ pred (direction m)
+turnRight (Mower p West) = Mower p North
+turnRight m = Mower (position m) $ succ (direction m)
 
 -- Monoid handling
 forward :: Field -> Mower -> Mower
@@ -50,10 +50,11 @@ forward f m@(Mower p West) = if (isValidPosition p' f) then Mower p' West else m
 
 -- Guards
 isValidPosition :: Position -> Field -> Bool
-isValidPosition p@(Position (x, y)) f
+isValidPosition p@(Position (x, y)) f@(Field _ mowers)
 	| x < 0 = False
 	| y < 0 = False
 	| p > p' = False
+	| elem p (map ( \m -> position m ) mowers ) = False
 	| otherwise = True
 	where p' = corner f
 
@@ -87,7 +88,7 @@ playGame :: [Player] -> State Field ()
 playGame [] = state ( \f -> ((), f) )
 playGame (p:xp) = state ( \f -> do
 	let m = execState (computeCommands (sequence $ co p) f ) (mo p)
-	( (), Field (corner f) ( m : (mowers f)) )
+	if (isValidPosition (position $ mo p) f) then ( (), Field (corner f) ( m : (mowers f)) ) else ( (), f )
 	) >>= ( \f -> playGame xp )
 
 -- Lazy eval
