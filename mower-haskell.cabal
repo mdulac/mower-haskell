@@ -18,7 +18,7 @@ executable mower-haskell
   Hs-Source-Dirs:      src/main
   main-is:             mower-haskell.hs
   -- other-modules:       
-  build-depends:       base ==4.6.*, mtl
+  build-depends:       base ==4.6.*, mtl, parsec ==3.1.*
 
 test-suite mower-haskell-test
   Hs-Source-Dirs:       src/test

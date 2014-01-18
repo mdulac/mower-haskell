@@ -1,15 +1,21 @@
 import System.IO
 import Data.Monoid
 import Data.List
+import Data.Either
 import Control.Monad.State
+
+import Text.Parsec hiding (State)
+import Text.Parsec.String (Parser)
 
 newtype Position = Position (Int, Int) deriving Eq
 
 data Command = L | R | F deriving (Show, Eq)
 data Direction = North | East | South | West deriving (Show, Eq, Enum)
 data Mower = Mower { position :: Position, direction :: Direction } deriving (Eq)
-data Field = Field { corner :: Position, mowers :: [Mower] } deriving Show
-data Player = Player { mower :: Mower, commands :: [Command] } deriving Show
+data Field = Field { corner :: Position, occupied :: [Position] } deriving Show
+
+data Player = Player { mo :: Mower, co :: [Maybe Command] } deriving Show
+data Configuration = Configuration { f :: Field, p :: [Player] } deriving Show
 
 instance Show Mower where
 	show (Mower p d) = "Mower @ " ++ show p ++ " facing " ++ show d
@@ -51,6 +57,12 @@ isValidPosition p@(Position (x, y)) f
 	| otherwise = True
 	where p' = corner f
 
+toDirection :: Char -> Direction
+toDirection 'N' = North
+toDirection 'W' = West
+toDirection 'S' = South
+toDirection 'E' = East
+
 toCommand :: Char -> Maybe Command
 toCommand 'G' = Just L
 toCommand 'D' = Just R
@@ -65,33 +77,81 @@ computeCommand c
 	| otherwise = id
 
 -- State Monad
-computeCommands :: [Command] -> State Mower ()
-computeCommands [] = state ( \m -> ((), m) )
-computeCommands (c:xc) = state ( \m -> ((), computeCommand c m) ) >>= ( \m -> computeCommands xc )
+computeCommands :: Maybe [Command] -> State Mower ()
+computeCommands Nothing = state ( \m -> ((), m) )
+computeCommands ( Just [] ) = state ( \m -> ((), m) )
+computeCommands ( Just (c:xc) ) = state ( \m -> ((), computeCommand c m) ) >>= ( \m -> computeCommands (Just xc) )
 
 -- State Monad
 playGame :: [Player] -> State Field ()
 playGame [] = state ( \f -> ((), f) )
-playGame (p:xp) = state (\f ->
-	let mo = execState (computeCommands c) m in ((), Field (corner f) ((mowers f) ++ [mo])) ) >>= ( \f -> playGame xp )
-	where
-		c = commands p
-		m = mower p
+playGame (p:xp) = state ( \f -> do
+	let m = execState (computeCommands $ sequence $ co p) (mo p)
+	( (), Field (corner f) ( (position m) : (occupied f)) )
+	) >>= ( \f -> playGame xp )
 
+-- Lazy eval
 withLineNumber :: [String] -> [(Int, String)]
 withLineNumber = zip [1..]
+
+makeConfig :: [(Int, String)] -> State Configuration ()
+makeConfig [] = state ( \c -> ((), c))
+makeConfig ((1, l):ls) = state ( \c -> ((), Configuration (parseField l) []) ) >>= ( \c -> makeConfig ls )
+makeConfig ((_, l):ls) = state ( \c -> ((), Configuration (f c) (parsePlayer l : (p c))) ) >>= ( \c -> makeConfig ls )
+
+parseField :: String -> Field
+parseField line = do
+	let f = parse fieldParser "" line
+	case f of
+		Right f -> f
+
+parsePlayer :: String -> Player
+parsePlayer line = do
+	let p = parse playerParser "" line
+	case p of
+		Right p -> p
+
+-- Parsers
+
+playerParser :: Parser Player
+playerParser = do
+	x <- many1 digit
+	space
+	y <- many1 digit
+	space
+	d <- oneOf "NESW"
+	space
+	cs <- many $ oneOf "GAD"
+	return $ makePlayer ( makeMower (read x :: Int) (read y :: Int) (toDirection d) ) ( makeCommands cs )
+
+fieldParser :: Parser Field
+fieldParser = do
+	x <- many1 digit
+	space
+	y <- many1 digit
+	return $ makeEmptyField (read x :: Int) (read y :: Int)
+
+-- Factories
+
+makeEmptyField :: Int -> Int -> Field
+makeEmptyField x y = Field (Position (x, y)) []
+
+makeMower :: Int -> Int -> Direction -> Mower
+makeMower x y d = Mower (Position (x, y)) d
+
+makePlayer :: Mower -> [Maybe Command] -> Player
+makePlayer = Player
+
+makeCommands :: String -> [Maybe Command]
+makeCommands = map toCommand
 
 main = do
 	handle <- openFile "src/resources/commands.txt" ReadMode
 	content <- hGetContents handle
-	print $ withLineNumber $ (lines content)
 
-	let p = mempty
-	let d = North
-	let m = Mower p d
+	let field = makeEmptyField 0 0
+	let conf = execState (makeConfig $ withLineNumber $ (lines content)) (Configuration field [])
 
-	print $ execState (computeCommands [L, L, F, F]) m
-	let result = execState (playGame [Player m [L, L, F, F], Player m [L, L, L], Player m [F, F, F]]) (Field p [])
-	print $ "RESULT IS : " ++ show result
+	print $ execState (playGame (p conf) ) (f conf)
 
 	hClose handle
