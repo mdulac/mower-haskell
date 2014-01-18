@@ -12,7 +12,7 @@ newtype Position = Position (Int, Int) deriving Eq
 data Command = L | R | F deriving (Show, Eq)
 data Direction = North | East | South | West deriving (Show, Eq, Enum)
 data Mower = Mower { position :: Position, direction :: Direction } deriving (Eq)
-data Field = Field { corner :: Position, occupied :: [Position] } deriving Show
+data Field = Field { corner :: Position, mowers :: [Mower] } deriving Show
 
 data Player = Player { mo :: Mower, co :: [Maybe Command] } deriving Show
 data Configuration = Configuration { f :: Field, p :: [Player] } deriving Show
@@ -31,7 +31,7 @@ instance Monoid Position where
 -- Typeclass Eq
 instance Ord Position where
 	Position (x, y) < Position (x', y') = x < x' && y < y'
-	Position (x, y) > Position (x', y') = x > x' && y > y'
+	Position (x, y) > Position (x', y') = x > x' || y > y'
 
 turnLeft :: Mower -> Mower
 turnLeft (Mower p West) = Mower p North
@@ -42,11 +42,11 @@ turnRight (Mower p North) = Mower p West
 turnRight m = Mower (position m) $ pred (direction m)
 
 -- Monoid handling
-forward :: Mower -> Mower
-forward m@(Mower p North) = Mower (mappend p (Position (1, 0))) North
-forward m@(Mower p East) = Mower (mappend p (Position (0, 1))) East
-forward m@(Mower p South) = Mower (mappend p (Position (-1, 0))) South
-forward m@(Mower p West) = Mower (mappend p (Position (0, -1))) West
+forward :: Field -> Mower -> Mower
+forward f m@(Mower p North) = if (isValidPosition p' f) then Mower p' North else m where p' = mappend p (Position (1, 0))
+forward f m@(Mower p East) = if (isValidPosition p' f) then Mower p' East else m where p' = mappend p (Position (0, 1))
+forward f m@(Mower p South) = if (isValidPosition p' f) then Mower p' South else m where p' = mappend p (Position (-1, 0))
+forward f m@(Mower p West) = if (isValidPosition p' f) then Mower p' West else m where p' = mappend p (Position (0, -1))
 
 -- Guards
 isValidPosition :: Position -> Field -> Bool
@@ -69,25 +69,25 @@ toCommand 'D' = Just R
 toCommand 'A' = Just F
 toCommand _ = Nothing
 
-computeCommand :: Command -> Mower -> Mower
-computeCommand c
+computeCommand :: Command -> Field -> Mower -> Mower
+computeCommand c f
 	| c == L = turnLeft
 	| c == R = turnRight
-	| c == F = forward
+	| c == F = forward f
 	| otherwise = id
 
 -- State Monad
-computeCommands :: Maybe [Command] -> State Mower ()
-computeCommands Nothing = state ( \m -> ((), m) )
-computeCommands ( Just [] ) = state ( \m -> ((), m) )
-computeCommands ( Just (c:xc) ) = state ( \m -> ((), computeCommand c m) ) >>= ( \m -> computeCommands (Just xc) )
+computeCommands :: Maybe [Command] -> Field -> State Mower ()
+computeCommands Nothing f = state ( \m -> ((), m) )
+computeCommands ( Just [] ) f = state ( \m -> ((), m) )
+computeCommands ( Just (c:xc) ) f = state ( \m -> ((), computeCommand c f m) ) >>= ( \m -> computeCommands (Just xc) f )
 
 -- State Monad
 playGame :: [Player] -> State Field ()
 playGame [] = state ( \f -> ((), f) )
 playGame (p:xp) = state ( \f -> do
-	let m = execState (computeCommands $ sequence $ co p) (mo p)
-	( (), Field (corner f) ( (position m) : (occupied f)) )
+	let m = execState (computeCommands (sequence $ co p) f ) (mo p)
+	( (), Field (corner f) ( m : (mowers f)) )
 	) >>= ( \f -> playGame xp )
 
 -- Lazy eval
