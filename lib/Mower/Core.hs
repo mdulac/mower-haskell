@@ -1,7 +1,34 @@
-import System.IO
+{-# LANGUAGE TypeFamilies #-}
+
+module Mower.Core (
+      Position(..)
+    , Command(..)
+    , Direction(..)
+    , Mower(..)
+    , Field(..)
+    , Player(..)
+    , Board(..)
+    , turnLeft
+    , turnRight
+    , forward
+    , toDirection
+    , toCommand
+    , computeCommand
+    , computeCommands
+    , playGame
+    , makeConfig
+    , parseField
+    , parsePlayer
+    , makeEmptyField
+    , makeMower
+    , makePlayer
+    , makeCommands
+    ) where
+
+import System.IO()
 import Data.Monoid
-import Data.List
-import Data.Either
+import Data.List()
+import Data.Either()
 import Control.Monad.State
 
 import Text.Parsec hiding (State)
@@ -13,9 +40,8 @@ data Command = L | R | F deriving (Show, Eq)
 data Direction = North | East | South | West deriving (Show, Eq, Enum)
 data Mower = Mower { position :: Position, direction :: Direction } deriving (Eq)
 data Field = Field { corner :: Position, mowers :: [Mower] } deriving Show
-
 data Player = Player { mo :: Mower, co :: [Maybe Command] } deriving Show
-data Configuration = Configuration { f :: Field, p :: [Player] } deriving Show
+data Board = Board { f :: Field, p :: [Player] } deriving Show
 
 instance Show Mower where
 	show (Mower p d) = "Mower @ " ++ show p ++ " facing " ++ show d
@@ -91,14 +117,10 @@ playGame (p:xp) = state ( \f -> do
 	if (isValidPosition (position $ mo p) f) then ( (), Field (corner f) ( m : (mowers f)) ) else ( (), f )
 	) >>= ( \f -> playGame xp )
 
--- Lazy eval
-withLineNumber :: [String] -> [(Int, String)]
-withLineNumber = zip [1..]
-
-makeConfig :: [(Int, String)] -> State Configuration ()
+makeConfig :: [(Int, String)] -> State Board ()
 makeConfig [] = state ( \c -> ((), c))
-makeConfig ((1, l):ls) = state ( \c -> ((), Configuration (parseField l) []) ) >>= ( \c -> makeConfig ls )
-makeConfig ((_, l):ls) = state ( \c -> ((), Configuration (f c) (parsePlayer l : (p c))) ) >>= ( \c -> makeConfig ls )
+makeConfig ((1, l):ls) = state ( \c -> ((), Board (parseField l) []) ) >>= ( \c -> makeConfig ls )
+makeConfig ((_, l):ls) = state ( \c -> ((), Board (f c) (parsePlayer l : (p c))) ) >>= ( \c -> makeConfig ls )
 
 parseField :: String -> Field
 parseField line = do
@@ -145,14 +167,3 @@ makePlayer = Player
 
 makeCommands :: String -> [Maybe Command]
 makeCommands = map toCommand
-
-main = do
-	handle <- openFile "src/resources/commands.txt" ReadMode
-	content <- hGetContents handle
-
-	let field = makeEmptyField 0 0
-	let conf = execState (makeConfig $ withLineNumber $ (lines content)) (Configuration field [])
-
-	print $ execState (playGame (p conf) ) (f conf)
-
-	hClose handle
