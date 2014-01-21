@@ -67,12 +67,18 @@ turnRight :: Mower -> Mower
 turnRight (Mower p West) = Mower p North
 turnRight m = Mower (position m) $ succ (direction m)
 
+forward :: Mower -> Mower
+forward m@(Mower p North) = Mower p' North where p' = mappend p (Position (1, 0))
+forward m@(Mower p East) = Mower p' East where p' = mappend p (Position (0, 1))
+forward m@(Mower p South) = Mower p' South where p' = mappend p (Position (-1, 0))
+forward m@(Mower p West) = Mower p' West where p' = mappend p (Position (0, -1))
+
 -- Monoid handling
-forward :: Field -> Mower -> Mower
-forward f m@(Mower p North) = if (isValidPosition p' f) then Mower p' North else m where p' = mappend p (Position (1, 0))
-forward f m@(Mower p East) = if (isValidPosition p' f) then Mower p' East else m where p' = mappend p (Position (0, 1))
-forward f m@(Mower p South) = if (isValidPosition p' f) then Mower p' South else m where p' = mappend p (Position (-1, 0))
-forward f m@(Mower p West) = if (isValidPosition p' f) then Mower p' West else m where p' = mappend p (Position (0, -1))
+forwardToValidPosition :: Field -> Mower -> Mower
+forwardToValidPosition f m = do
+	let m' = forward m
+	let p' = position m'
+	if (isValidPosition p' f) then m' else m
 
 -- Guards
 isValidPosition :: Position -> Field -> Bool
@@ -100,7 +106,7 @@ computeCommand :: Command -> Field -> Mower -> Mower
 computeCommand c f
 	| c == L = turnLeft
 	| c == R = turnRight
-	| c == F = forward f
+	| c == F = forwardToValidPosition f
 	| otherwise = id
 
 -- State Monad
@@ -139,18 +145,18 @@ parsePlayer line = do
 playerParser :: Parser Player
 playerParser = do
 	x <- many1 digit
-	space
+	_ <- space
 	y <- many1 digit
-	space
+	_ <- space
 	d <- oneOf "NESW"
-	space
+	_ <- space
 	cs <- many $ oneOf "GAD"
 	return $ makePlayer ( makeMower (read x :: Int) (read y :: Int) (toDirection d) ) ( makeCommands cs )
 
 fieldParser :: Parser Field
 fieldParser = do
 	x <- many1 digit
-	space
+	_ <- space
 	y <- many1 digit
 	return $ makeEmptyField (read x :: Int) (read y :: Int)
 
