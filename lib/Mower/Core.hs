@@ -11,6 +11,7 @@ module Mower.Core (
     , turnLeft
     , turnRight
     , forward
+    , forwardToValidPosition
     , toDirection
     , toCommand
     , computeCommand
