@@ -41,8 +41,8 @@ data Command = L | R | F deriving (Show, Eq)
 data Direction = North | East | South | West deriving (Show, Eq, Enum)
 data Mower = Mower { position :: Position, direction :: Direction } deriving (Eq)
 data Field = Field { corner :: Position, mowers :: [Mower] } deriving Show
-data Player = Player { mo :: Mower, co :: [Maybe Command] } deriving Show
-data Board = Board { f :: Field, p :: [Player] } deriving Show
+data Player = Player { mower :: Mower, commands :: [Maybe Command] } deriving Show
+data Board = Board { field :: Field, players :: [Player] } deriving Show
 
 instance Show Mower where
 	show (Mower p d) = "Mower @ " ++ show p ++ " facing " ++ show d
@@ -120,14 +120,14 @@ computeCommands ( Just (c:xc) ) f = state ( \m -> ((), computeCommand c f m) ) >
 playGame :: [Player] -> State Field ()
 playGame [] = state ( \f -> ((), f) )
 playGame (p:xp) = state ( \f -> do
-	let m = execState (computeCommands (sequence $ co p) f ) (mo p)
-	if (isValidPosition (position $ mo p) f) then ( (), Field (corner f) ( m : (mowers f)) ) else ( (), f )
+	let m = execState (computeCommands (sequence $ commands p) f ) (mower p)
+	if (isValidPosition (position $ mower p) f) then ( (), Field (corner f) ( m : (mowers f)) ) else ( (), f )
 	) >>= ( \f -> playGame xp )
 
 makeConfig :: [(Int, String)] -> State Board ()
 makeConfig [] = state ( \c -> ((), c))
 makeConfig ((1, l):ls) = state ( \c -> ((), Board (parseField l) []) ) >>= ( \c -> makeConfig ls )
-makeConfig ((_, l):ls) = state ( \c -> ((), Board (f c) (parsePlayer l : (p c))) ) >>= ( \c -> makeConfig ls )
+makeConfig ((_, l):ls) = state ( \c -> ((), Board (field c) (parsePlayer l : (players c))) ) >>= ( \c -> makeConfig ls )
 
 parseField :: String -> Field
 parseField line = do

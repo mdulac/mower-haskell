@@ -13,9 +13,9 @@ main = do
 	handle <- openFile "resources/commands.txt" ReadMode
 	content <- hGetContents handle
 
-	let field = makeEmptyField 0 0
-	let board = execState (makeConfig $ withLineNumber $ (lines content)) (Board field [])
+	let f = makeEmptyField 0 0
+	let b = execState (makeConfig $ withLineNumber $ (lines content)) (Board f [])
 
-	print $ execState (playGame (p board) ) (f board)
+	print $ execState (playGame (players b) ) (field b)
 
 	hClose handle
