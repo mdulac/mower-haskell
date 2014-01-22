@@ -14,8 +14,8 @@ main = do
 	content <- hGetContents handle
 
 	let f = makeEmptyField 0 0
-	let b = execState (makeConfig $ withLineNumber $ (lines content)) (Board f [])
+	-- let b = execState (makeConfig $ withLineNumber $ (lines content)) (Board f [])
 
-	print $ execState (playGame (players b) ) (field b)
+	-- print $ execState (playGame (players b) ) (field b)
 
 	hClose handle
