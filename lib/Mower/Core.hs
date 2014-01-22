@@ -24,6 +24,7 @@ module Mower.Core (
     , makeMower
     , makePlayer
     , makeCommands
+    , makePosition
     ) where
 
 import System.IO()
@@ -41,7 +42,7 @@ data Command = L | R | F deriving (Show, Eq)
 data Direction = North | East | South | West deriving (Show, Eq, Enum)
 data Mower = Mower { position :: Position, direction :: Direction } deriving (Eq)
 data Field = Field { corner :: Position, mowers :: [Mower] } deriving Show
-data Player = Player { mower :: Mower, commands :: [Maybe Command] } deriving Show
+data Player = Player { mower :: Mower, commands :: [Command] } deriving Show
 data Board = Board { field :: Field, players :: [Player] } deriving Show
 
 instance Show Mower where
@@ -111,39 +112,46 @@ computeCommand c f
 	| otherwise = id
 
 -- State Monad
-computeCommands :: Maybe [Command] -> Field -> State Mower ()
-computeCommands Nothing f = state ( \m -> ((), m) )
-computeCommands ( Just [] ) f = state ( \m -> ((), m) )
-computeCommands ( Just (c:xc) ) f = state ( \m -> ((), computeCommand c f m) ) >>= ( \m -> computeCommands (Just xc) f )
+computeCommands :: [Command] -> Field -> State Mower ()
+computeCommands [] f = state ( \m -> ((), m) )
+computeCommands (c:xc) f = state ( \m -> ((), computeCommand c f m) ) >> ( computeCommands xc f )
 
 -- State Monad
 playGame :: [Player] -> State Field ()
 playGame [] = state ( \f -> ((), f) )
 playGame (p:xp) = state ( \f -> do
-	let m = execState (computeCommands (sequence $ commands p) f ) (mower p)
+	let m = execState (computeCommands (commands p) f ) (mower p)
 	if (isValidPosition (position $ mower p) f) then ( (), Field (corner f) ( m : (mowers f)) ) else ( (), f )
-	) >>= ( \f -> playGame xp )
+	) >> ( playGame xp )
 
 makeConfig :: [(Int, String)] -> State Board ()
-makeConfig [] = state ( \c -> ((), c))
-makeConfig ((1, l):ls) = state ( \c -> ((), Board (parseField l) []) ) >>= ( \c -> makeConfig ls )
-makeConfig ((_, l):ls) = state ( \c -> ((), Board (field c) (parsePlayer l : (players c))) ) >>= ( \c -> makeConfig ls )
+makeConfig [] = state ( \b -> ((), b))
+makeConfig ((1, l):ls) = 
+	case (parseField l) of 
+		Nothing -> state ( \b -> ((), b) )
+		Just f -> state ( \b -> ((), Board f []) ) >> ( makeConfig ls )
+makeConfig ((_, l):ls) =
+	case (parsePlayer l) of
+		Nothing -> state ( \b -> ((), b) ) >> ( makeConfig ls )
+		Just p -> state ( \b -> ((), Board (field b) (p : (players b))) ) >> ( makeConfig ls )
 
-parseField :: String -> Field
+parseField :: String -> Maybe Field
 parseField line = do
 	let f = parse fieldParser "" line
 	case f of
-		Right f -> f
+		Right Nothing -> Nothing
+		Right field -> field
 
-parsePlayer :: String -> Player
+parsePlayer :: String -> Maybe Player
 parsePlayer line = do
 	let p = parse playerParser "" line
 	case p of
-		Right p -> p
+		Right Nothing -> Nothing
+		Right player -> player
 
 -- Parsers
 
-playerParser :: Parser Player
+playerParser :: Parser (Maybe Player)
 playerParser = do
 	x <- many1 digit
 	_ <- space
@@ -152,9 +160,12 @@ playerParser = do
 	d <- oneOf "NESW"
 	_ <- space
 	cs <- many $ oneOf "GAD"
-	return $ makePlayer ( makeMower (read x :: Int) (read y :: Int) (toDirection d) ) ( makeCommands cs )
+	case makeMower (read x :: Int) (read y :: Int) (toDirection d) of
+		Nothing -> return Nothing
+		Just m -> return $ makePlayer m ( makeCommands cs )
+	
 
-fieldParser :: Parser Field
+fieldParser :: Parser (Maybe Field)
 fieldParser = do
 	x <- many1 digit
 	_ <- space
@@ -163,14 +174,29 @@ fieldParser = do
 
 -- Factories
 
-makeEmptyField :: Int -> Int -> Field
-makeEmptyField x y = Field (Position (x, y)) []
+makeEmptyField :: Int -> Int -> Maybe Field
+makeEmptyField x y = 
+	case (makePosition x y) of
+		Nothing -> Nothing
+		Just p -> Just (Field p [])
 
-makeMower :: Int -> Int -> Direction -> Mower
-makeMower x y d = Mower (Position (x, y)) d
+makeMower :: Int -> Int -> Direction -> Maybe Mower
+makeMower x y d =
+	case (makePosition x y) of
+		Nothing -> Nothing
+		Just p -> Just (Mower p d)
 
-makePlayer :: Mower -> [Maybe Command] -> Player
-makePlayer = Player
+makePlayer :: Mower -> [Maybe Command] -> Maybe Player
+makePlayer m c =
+	case (sequence c) of
+		Nothing -> Nothing
+		Just cs -> Just (Player m cs)
 
 makeCommands :: String -> [Maybe Command]
 makeCommands = map toCommand
+
+makePosition :: Int -> Int -> Maybe Position
+makePosition x y
+	| x < 0 = Nothing
+	| y < 0 = Nothing
+	| otherwise = Just $ Position (x, y)
