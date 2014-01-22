@@ -4,6 +4,8 @@ import Test.Framework.Providers.HUnit
 import Test.Framework
 import Test.HUnit hiding (test, Test)
 
+import Data.Maybe
+
 import Mower.Core
 
 tests :: Test
@@ -20,7 +22,7 @@ tests = testGroup "Mower.Core.Tests" [
             testCase "should_face_the_east_after_turn_left_when_facing_south" should_face_the_east_after_turn_left_when_facing_south,
             testCase "should_face_the_south_after_turn_left_when_facing_west" should_face_the_south_after_turn_left_when_facing_west
          ],
-        testGroup "forward" [
+        testGroup "Forward" [
         	testCase "should_forward_to_the_north" should_forward_to_the_north,
         	testCase "should_forward_to_the_east" should_forward_to_the_east,
         	testCase "should_forward_to_the_south" should_forward_to_the_south,
@@ -31,6 +33,17 @@ tests = testGroup "Mower.Core.Tests" [
          	testCase "should_not_make_position_with_negative_x" should_not_make_position_with_negative_x,
          	testCase "should_not_make_position_with_negative_y" should_not_make_position_with_negative_y,
          	testCase "should_not_make_position_with_negative_x_and_y" should_not_make_position_with_negative_x_and_y
+         ],
+         testGroup "Forward if valid position" [
+         	testCase "should_forward_if_target_position_is_valid" should_forward_if_target_position_is_valid,
+         	testCase "should_not_forward_if_target_position_is_outside_the_field" should_not_forward_if_target_position_is_outside_the_field,
+         	testCase "should_not_forward_if_target_position_is_occupied" should_not_forward_if_target_position_is_occupied
+         ],
+         testGroup "Create commands and directions" [
+         	testCase "should_transform_valid_string_to_commands" should_transform_valid_string_to_commands,
+         	testCase "should_not_transform_invalid_string_to_commands" should_not_transform_invalid_string_to_commands,
+         	testCase "should_transform_valid_string_to_directions" should_transform_valid_string_to_directions,
+         	testCase "should_not_transform_invalid_string_to_directions" should_not_transform_invalid_string_to_directions
          ]
     ]
 
@@ -61,4 +74,38 @@ should_make_position_with_positive_value = makePosition 0 0 @?= Just ( Position 
 should_not_make_position_with_negative_x = makePosition (-1) 1 @?= Nothing
 should_not_make_position_with_negative_y = makePosition 1 (-1) @?= Nothing
 should_not_make_position_with_negative_x_and_y = makePosition (-1) (-1) @?= Nothing
+
+--------------------------------------------------------------------------------
+
+should_forward_if_target_position_is_valid = do
+	let m = makeMower 1 1 North
+	let f = Field (Position (5, 5)) []
+	forwardIfTargetPositionIsValid f (fromJust m) @?= fromJust (makeMower 2 1 North)
+
+should_not_forward_if_target_position_is_outside_the_field = do
+	let m = makeMower 6 6 North
+	let f = Field (Position (5, 5)) []
+	forwardIfTargetPositionIsValid f (fromJust m) @?= fromJust (makeMower 6 6 North)
+
+should_not_forward_if_target_position_is_occupied = do
+	let m = makeMower 1 1 North
+	let f = Field (Position (5, 5)) [fromJust (makeMower 2 1 North)]
+	forwardIfTargetPositionIsValid f (fromJust m) @?= fromJust (makeMower 1 1 North)
+
+--------------------------------------------------------------------------------
+
+should_transform_valid_string_to_commands = sequence (map toCommand "AAAGGGDDD") @?= Just [F, F, F, L, L, L, R, R, R]
+should_not_transform_invalid_string_to_commands = sequence (map toCommand "AAAGGGEDD") @?= Nothing
+
+should_transform_valid_string_to_directions = sequence (map toDirection "NNWWSSEE") @?= Just [North, North, West, West, South, South, East, East]
+should_not_transform_invalid_string_to_directions = sequence (map toDirection "NNWWSSIEE") @?= Nothing
+
+
+
+
+
+
+
+
+
 

@@ -11,7 +11,7 @@ module Mower.Core (
     , turnLeft
     , turnRight
     , forward
-    , forwardToValidPosition
+    , forwardIfTargetPositionIsValid
     , toDirection
     , toCommand
     , computeCommand
@@ -76,8 +76,8 @@ forward m@(Mower p South) = Mower p' South where p' = mappend p (Position (-1, 0
 forward m@(Mower p West) = Mower p' West where p' = mappend p (Position (0, -1))
 
 -- Monoid handling
-forwardToValidPosition :: Field -> Mower -> Mower
-forwardToValidPosition f m = do
+forwardIfTargetPositionIsValid :: Field -> Mower -> Mower
+forwardIfTargetPositionIsValid f m = do
 	let m' = forward m
 	let p' = position m'
 	if (isValidPosition p' f) then m' else m
@@ -92,11 +92,12 @@ isValidPosition p@(Position (x, y)) f@(Field _ mowers)
 	| otherwise = True
 	where p' = corner f
 
-toDirection :: Char -> Direction
-toDirection 'N' = North
-toDirection 'W' = West
-toDirection 'S' = South
-toDirection 'E' = East
+toDirection :: Char -> Maybe Direction
+toDirection 'N' = Just North
+toDirection 'W' = Just West
+toDirection 'S' = Just South
+toDirection 'E' = Just East
+toDirection _ = Nothing
 
 toCommand :: Char -> Maybe Command
 toCommand 'G' = Just L
@@ -108,7 +109,7 @@ computeCommand :: Command -> Field -> Mower -> Mower
 computeCommand c f
 	| c == L = turnLeft
 	| c == R = turnRight
-	| c == F = forwardToValidPosition f
+	| c == F = forwardIfTargetPositionIsValid f
 	| otherwise = id
 
 -- State Monad
@@ -160,11 +161,12 @@ playerParser = do
 	d <- oneOf "NESW"
 	_ <- space
 	cs <- many $ oneOf "GAD"
-	case makeMower (read x :: Int) (read y :: Int) (toDirection d) of
+	case (toDirection d) of
 		Nothing -> return Nothing
-		Just m -> return $ makePlayer m ( makeCommands cs )
+		Just d -> case makeMower (read x :: Int) (read y :: Int) d of
+			Nothing -> return Nothing
+			Just m -> return $ makePlayer m ( makeCommands cs )
 	
-
 fieldParser :: Parser (Maybe Field)
 fieldParser = do
 	x <- many1 digit
@@ -181,16 +183,16 @@ makeEmptyField x y =
 		Just p -> Just (Field p [])
 
 makeMower :: Int -> Int -> Direction -> Maybe Mower
-makeMower x y d =
+makeMower x y direction =
 	case (makePosition x y) of
 		Nothing -> Nothing
-		Just p -> Just (Mower p d)
+		Just position -> Just (Mower position direction)
 
 makePlayer :: Mower -> [Maybe Command] -> Maybe Player
-makePlayer m c =
-	case (sequence c) of
+makePlayer mower commands =
+	case (sequence commands) of
 		Nothing -> Nothing
-		Just cs -> Just (Player m cs)
+		Just cs -> Just (Player mower cs)
 
 makeCommands :: String -> [Maybe Command]
 makeCommands = map toCommand
