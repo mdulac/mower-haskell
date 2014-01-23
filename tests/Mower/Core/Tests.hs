@@ -44,6 +44,10 @@ tests = testGroup "Mower.Core.Tests" [
          	testCase "should_not_transform_invalid_string_to_commands" should_not_transform_invalid_string_to_commands,
          	testCase "should_transform_valid_string_to_directions" should_transform_valid_string_to_directions,
          	testCase "should_not_transform_invalid_string_to_directions" should_not_transform_invalid_string_to_directions
+         ],
+         testGroup "Parser" [
+         	testCase "should_parse_valid_field" should_parse_valid_field,
+         	testCase "should_parse_valid_player" should_parse_valid_player
          ]
     ]
 
@@ -100,7 +104,10 @@ should_not_transform_invalid_string_to_commands = sequence (map toCommand "AAAGG
 should_transform_valid_string_to_directions = sequence (map toDirection "NNWWSSEE") @?= Just [North, North, West, West, South, South, East, East]
 should_not_transform_invalid_string_to_directions = sequence (map toDirection "NNWWSSIEE") @?= Nothing
 
+--------------------------------------------------------------------------------
 
+should_parse_valid_field = parseField "10 10" @?= makeEmptyField 10 10
+should_parse_valid_player = parsePlayer "2 2 N AGD" @?= Just ( Player (Mower (Position (2, 2)) North) [F, L, R] )
 
 
 

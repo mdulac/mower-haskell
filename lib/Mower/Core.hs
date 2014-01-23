@@ -41,9 +41,9 @@ newtype Position = Position (Int, Int) deriving Eq
 data Command = L | R | F deriving (Show, Eq)
 data Direction = North | East | South | West deriving (Show, Eq, Enum)
 data Mower = Mower { position :: Position, direction :: Direction } deriving (Eq)
-data Field = Field { corner :: Position, mowers :: [Mower] } deriving Show
-data Player = Player { mower :: Mower, commands :: [Command] } deriving Show
-data Board = Board { field :: Field, players :: [Player] } deriving Show
+data Field = Field { corner :: Position, mowers :: [Mower] } deriving (Show, Eq)
+data Player = Player { mower :: Mower, commands :: [Command] } deriving (Show, Eq)
+data Board = Board { field :: Field, players :: [Player] } deriving (Show, Eq)
 
 instance Show Mower where
 	show (Mower p d) = "Mower @ " ++ show p ++ " facing " ++ show d
@@ -80,7 +80,7 @@ forwardIfTargetPositionIsValid :: Field -> Mower -> Mower
 forwardIfTargetPositionIsValid f m = do
 	let m' = forward m
 	let p' = position m'
-	if (isValidPosition p' f) then m' else m
+	if isValidPosition p' f then m' else m
 
 -- Guards
 isValidPosition :: Position -> Field -> Bool
@@ -128,11 +128,11 @@ playGame (p:xp) = state ( \f -> do
 makeConfig :: [(Int, String)] -> State Board ()
 makeConfig [] = state ( \b -> ((), b))
 makeConfig ((1, l):ls) = 
-	case (parseField l) of 
+	case parseField l of 
 		Nothing -> state ( \b -> ((), b) )
 		Just f -> state ( \b -> ((), Board f []) ) >> ( makeConfig ls )
 makeConfig ((_, l):ls) =
-	case (parsePlayer l) of
+	case parsePlayer l of
 		Nothing -> state ( \b -> ((), b) ) >> ( makeConfig ls )
 		Just p -> state ( \b -> ((), Board (field b) (p : (players b))) ) >> ( makeConfig ls )
 
@@ -161,7 +161,7 @@ playerParser = do
 	d <- oneOf "NESW"
 	_ <- space
 	cs <- many $ oneOf "GAD"
-	case (toDirection d) of
+	case toDirection d of
 		Nothing -> return Nothing
 		Just d -> case makeMower (read x :: Int) (read y :: Int) d of
 			Nothing -> return Nothing
@@ -178,19 +178,19 @@ fieldParser = do
 
 makeEmptyField :: Int -> Int -> Maybe Field
 makeEmptyField x y = 
-	case (makePosition x y) of
+	case makePosition x y of
 		Nothing -> Nothing
 		Just p -> Just (Field p [])
 
 makeMower :: Int -> Int -> Direction -> Maybe Mower
 makeMower x y direction =
-	case (makePosition x y) of
+	case makePosition x y of
 		Nothing -> Nothing
 		Just position -> Just (Mower position direction)
 
 makePlayer :: Mower -> [Maybe Command] -> Maybe Player
 makePlayer mower commands =
-	case (sequence commands) of
+	case sequence commands of
 		Nothing -> Nothing
 		Just cs -> Just (Player mower cs)
 
