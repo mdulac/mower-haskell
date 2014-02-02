@@ -5,11 +5,13 @@ import Test.Framework
 import Test.HUnit hiding (test, Test)
 
 import Data.Maybe
+import Control.Monad.State
 
 import Mower.Core
 
 tests :: Test
 tests = testGroup "Mower.Core.Tests" [
+
         testGroup "Turn right" [
             testCase "should_face_the_east_after_turn_right_when_facing_north" should_face_the_east_after_turn_right_when_facing_north,
             testCase "should_face_the_south_after_turn_right_when_facing_east" should_face_the_south_after_turn_right_when_facing_east,
@@ -47,7 +49,18 @@ tests = testGroup "Mower.Core.Tests" [
          ],
          testGroup "Parser" [
          	testCase "should_parse_valid_field" should_parse_valid_field,
-         	testCase "should_parse_valid_player" should_parse_valid_player
+         	testCase "should_parse_valid_player" should_parse_valid_player,
+         	testCase "should_not_parse_invalid_field" should_not_parse_invalid_field,
+         	testCase "should_not_parse_invalid_player" should_not_parse_invalid_player
+         ],
+         testGroup "Compute command" [
+         	testCase "should_forward_if_command_is_F" should_forward_if_command_is_F,
+         	testCase "should_turn_left_if_command_is_L" should_turn_left_if_command_is_L,
+         	testCase "should_turn_right_if_command_is_R" should_turn_right_if_command_is_R
+         ],
+         testGroup "computeCommands" [
+         	testCase "should_go_back_at_the_same_place_when_execute_return" should_go_back_at_the_same_place_when_execute_return,
+         	testCase "should_go_back_at_the_same_place_when_execute_square_commands" should_go_back_at_the_same_place_when_execute_square_commands
          ]
     ]
 
@@ -100,7 +113,6 @@ should_not_forward_if_target_position_is_occupied = do
 
 should_transform_valid_string_to_commands = sequence (map toCommand "AAAGGGDDD") @?= Just [F, F, F, L, L, L, R, R, R]
 should_not_transform_invalid_string_to_commands = sequence (map toCommand "AAAGGGEDD") @?= Nothing
-
 should_transform_valid_string_to_directions = sequence (map toDirection "NNWWSSEE") @?= Just [North, North, West, West, South, South, East, East]
 should_not_transform_invalid_string_to_directions = sequence (map toDirection "NNWWSSIEE") @?= Nothing
 
@@ -108,6 +120,36 @@ should_not_transform_invalid_string_to_directions = sequence (map toDirection "N
 
 should_parse_valid_field = parseField "10 10" @?= makeEmptyField 10 10
 should_parse_valid_player = parsePlayer "2 2 N AGD" @?= Just ( Player (Mower (Position (2, 2)) North) [F, L, R] )
+should_not_parse_invalid_field = parseField "A 10" @?= Nothing
+should_not_parse_invalid_player = parsePlayer "A 2 N AGD" @?= Nothing
+
+--------------------------------------------------------------------------------
+
+should_forward_if_command_is_F = computeCommand F (fromJust $ makeEmptyField 5 5) (fromJust $ makeMower 1 1 North) @?= fromJust (makeMower 2 1 North)
+should_turn_left_if_command_is_L = computeCommand L (fromJust $ makeEmptyField 5 5) (fromJust $ makeMower 1 1 North) @?= fromJust (makeMower 1 1 West)
+should_turn_right_if_command_is_R = computeCommand R (fromJust $ makeEmptyField 5 5) (fromJust $ makeMower 1 1 North) @?= fromJust (makeMower 1 1 East)
+
+--------------------------------------------------------------------------------
+
+should_go_back_at_the_same_place_when_execute_return = do
+	let state = computeCommands [F, F, F, F, L, L, F, F, F, F] ( fromJust (makeEmptyField 10 10) )
+	let mower = execState state (fromJust $ makeMower 2 2 North)
+	mower @?= fromJust (makeMower 2 2 South)
+
+should_go_back_at_the_same_place_when_execute_square_commands = do
+	let state = computeCommands [F, R, F, R, F, R, F, R] ( fromJust (makeEmptyField 5 5) )
+	let mower = execState state (fromJust $ makeMower 2 2 North)
+	mower @?= fromJust (makeMower 2 2 North)
+
+
+
+
+
+
+
+
+
+
 
 
 
