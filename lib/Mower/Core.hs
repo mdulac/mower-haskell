@@ -17,7 +17,7 @@ module Mower.Core (
     , computeCommand
     , computeCommands
     , playGame
-    , makeConfig
+    , makeBoard
     , parseField
     , parsePlayer
     , makeEmptyField
@@ -38,7 +38,7 @@ import Text.Parsec.String (Parser)
 
 newtype Position = Position (Int, Int) deriving Eq
 
-data Command = L | R | F deriving (Show, Eq)
+data Command = L | R | F deriving (Show, Eq, Enum)
 data Direction = North | East | South | West deriving (Show, Eq, Enum)
 data Mower = Mower { position :: Position, direction :: Direction } deriving (Eq)
 data Field = Field { corner :: Position, mowers :: [Mower] } deriving (Show, Eq)
@@ -46,7 +46,7 @@ data Player = Player { mower :: Mower, commands :: [Command] } deriving (Show, E
 data Board = Board { field :: Field, players :: [Player] } deriving (Show, Eq)
 
 instance Show Mower where
-	show (Mower p d) = "Mower @ " ++ show p ++ " facing " ++ show d
+	show (Mower pos dir) = "Mower @ " ++ show pos ++ " facing " ++ show dir
 
 instance Show Position where
 	show (Position (x, y)) = "(" ++ show x ++ ", " ++ show y ++ ")"
@@ -62,18 +62,18 @@ instance Ord Position where
 	Position (x, y) > Position (x', y') = x > x' || y > y'
 
 turnLeft :: Mower -> Mower
-turnLeft (Mower p North) = Mower p West
+turnLeft (Mower pos North) = Mower pos West
 turnLeft m = Mower (position m) $ pred (direction m)
 
 turnRight :: Mower -> Mower
-turnRight (Mower p West) = Mower p North
+turnRight (Mower pos West) = Mower pos North
 turnRight m = Mower (position m) $ succ (direction m)
 
 forward :: Mower -> Mower
-forward m@(Mower p North) = Mower p' North where p' = mappend p (Position (1, 0))
-forward m@(Mower p East) = Mower p' East where p' = mappend p (Position (0, 1))
-forward m@(Mower p South) = Mower p' South where p' = mappend p (Position (-1, 0))
-forward m@(Mower p West) = Mower p' West where p' = mappend p (Position (0, -1))
+forward (Mower pos North) = Mower pos' North where pos' = mappend pos (Position (1, 0))
+forward (Mower pos East) = Mower pos' East where pos' = mappend pos (Position (0, 1))
+forward (Mower pos South) = Mower pos' South where pos' = mappend pos (Position (-1, 0))
+forward (Mower pos West) = Mower pos' West where pos' = mappend pos (Position (0, -1))
 
 -- Monoid handling
 forwardIfTargetPositionIsValid :: Field -> Mower -> Mower
@@ -84,13 +84,13 @@ forwardIfTargetPositionIsValid f m = do
 
 -- Guards
 isValidPosition :: Position -> Field -> Bool
-isValidPosition p@(Position (x, y)) f@(Field _ mowers)
+isValidPosition pos@(Position (x, y)) f@(Field _ mowers)
 	| x < 0 = False
 	| y < 0 = False
-	| p > p' = False
-	| elem p (map ( \m -> position m ) mowers ) = False
+	| pos > pos' = False
+	| elem pos (map ( \m -> position m ) mowers ) = False
 	| otherwise = True
-	where p' = corner f
+	where pos' = corner f
 
 toDirection :: Char -> Maybe Direction
 toDirection 'N' = Just North
@@ -114,7 +114,7 @@ computeCommand c f
 
 -- State Monad
 computeCommands :: [Command] -> Field -> State Mower ()
-computeCommands [] f = state ( \m -> ((), m) )
+computeCommands [] _ = state ( \m -> ((), m) )
 computeCommands (c:xc) f = state ( \m -> ((), computeCommand c f m) ) >> ( computeCommands xc f )
 
 -- State Monad
@@ -125,21 +125,22 @@ playGame (p:xp) = state ( \f -> do
 	if (isValidPosition (position $ mower p) f) then ( (), Field (corner f) ( m : (mowers f)) ) else ( (), f )
 	) >> ( playGame xp )
 
-makeConfig :: [(Int, String)] -> State Board ()
-makeConfig [] = state ( \b -> ((), b))
-makeConfig ((1, l):ls) = 
+makeBoard :: [(Int, String)] -> State Board ()
+makeBoard [] = state ( \b -> ((), b))
+makeBoard ((1, l):ls) = 
 	case parseField l of 
 		Nothing -> state ( \b -> ((), b) )
-		Just f -> state ( \b -> ((), Board f []) ) >> ( makeConfig ls )
-makeConfig ((_, l):ls) =
+		Just f -> state ( \_ -> ((), Board f []) ) >> ( makeBoard ls )
+makeBoard ((_, l):ls) =
 	case parsePlayer l of
-		Nothing -> state ( \b -> ((), b) ) >> ( makeConfig ls )
-		Just p -> state ( \b -> ((), Board (field b) (p : (players b))) ) >> ( makeConfig ls )
+		Nothing -> state ( \b -> ((), b) ) >> ( makeBoard ls )
+		Just p -> state ( \b -> ((), Board (field b) (p : (players b))) ) >> ( makeBoard ls )
 
 parseField :: String -> Maybe Field
 parseField line = do
 	let f = parse fieldParser "" line
 	case f of
+		Left _ -> Nothing
 		Right Nothing -> Nothing
 		Right field -> field
 
@@ -147,6 +148,7 @@ parsePlayer :: String -> Maybe Player
 parsePlayer line = do
 	let p = parse playerParser "" line
 	case p of
+		Left _ -> Nothing
 		Right Nothing -> Nothing
 		Right player -> player
 
@@ -163,7 +165,7 @@ playerParser = do
 	cs <- many $ oneOf "GAD"
 	case toDirection d of
 		Nothing -> return Nothing
-		Just d -> case makeMower (read x :: Int) (read y :: Int) d of
+		Just direction -> case makeMower (read x :: Int) (read y :: Int) direction of
 			Nothing -> return Nothing
 			Just m -> return $ makePlayer m ( makeCommands cs )
 	
