@@ -61,6 +61,41 @@ instance Ord Position where
 	Position (x, y) < Position (x', y') = x < x' && y < y'
 	Position (x, y) > Position (x', y') = x > x' || y > y'
 
+-- Factories
+
+makePosition :: Int -> Int -> Maybe Position
+makePosition x y
+	| x < 0 = Nothing
+	| y < 0 = Nothing
+	| otherwise = Just $ Position (x, y)
+
+makeEmptyField :: Int -> Int -> Maybe Field
+makeEmptyField x y = 
+	case makePosition x y of
+		Nothing -> Nothing
+		Just p -> Just (Field p [])
+
+makeMower :: Int -> Int -> Direction -> Maybe Mower
+makeMower x y direction =
+	case makePosition x y of
+		Nothing -> Nothing
+		Just position -> Just (Mower position direction)
+
+makePlayer :: Mower -> [Maybe Command] -> Maybe Player
+makePlayer mower commands =
+	case sequence commands of
+		Nothing -> Nothing
+		Just cs -> Just (Player mower cs)
+
+toCommand :: Char -> Maybe Command
+toCommand 'G' = Just L
+toCommand 'D' = Just R
+toCommand 'A' = Just F
+toCommand _ = Nothing
+
+makeCommands :: String -> [Maybe Command]
+makeCommands = map toCommand
+
 turnLeft :: Mower -> Mower
 turnLeft (Mower pos North) = Mower pos West
 turnLeft m = Mower (position m) $ pred (direction m)
@@ -98,12 +133,6 @@ toDirection 'W' = Just West
 toDirection 'S' = Just South
 toDirection 'E' = Just East
 toDirection _ = Nothing
-
-toCommand :: Char -> Maybe Command
-toCommand 'G' = Just L
-toCommand 'D' = Just R
-toCommand 'A' = Just F
-toCommand _ = Nothing
 
 computeCommand :: Command -> Field -> Mower -> Mower
 computeCommand c f
@@ -175,32 +204,3 @@ fieldParser = do
 	_ <- space
 	y <- many1 digit
 	return $ makeEmptyField (read x :: Int) (read y :: Int)
-
--- Factories
-
-makeEmptyField :: Int -> Int -> Maybe Field
-makeEmptyField x y = 
-	case makePosition x y of
-		Nothing -> Nothing
-		Just p -> Just (Field p [])
-
-makeMower :: Int -> Int -> Direction -> Maybe Mower
-makeMower x y direction =
-	case makePosition x y of
-		Nothing -> Nothing
-		Just position -> Just (Mower position direction)
-
-makePlayer :: Mower -> [Maybe Command] -> Maybe Player
-makePlayer mower commands =
-	case sequence commands of
-		Nothing -> Nothing
-		Just cs -> Just (Player mower cs)
-
-makeCommands :: String -> [Maybe Command]
-makeCommands = map toCommand
-
-makePosition :: Int -> Int -> Maybe Position
-makePosition x y
-	| x < 0 = Nothing
-	| y < 0 = Nothing
-	| otherwise = Just $ Position (x, y)
