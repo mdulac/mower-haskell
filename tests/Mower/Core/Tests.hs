@@ -12,53 +12,64 @@ import Mower.Core
 tests :: Test
 tests = testGroup "Mower.Core.Tests" [
 
+        testGroup "Make Position" [
+            testCase "should_make_position_with_positive_value" should_make_position_with_positive_value,
+            testCase "should_not_make_position_with_negative_x" should_not_make_position_with_negative_x,
+            testCase "should_not_make_position_with_negative_y" should_not_make_position_with_negative_y,
+            testCase "should_not_make_position_with_negative_x_and_y" should_not_make_position_with_negative_x_and_y
+        ],
+        testGroup "Make Empty Field" [
+            testCase "should_make_empty_field_if_position_is_valid" should_make_empty_field_if_position_is_valid,
+            testCase "should_not_make_empty_field_if_position_is_invalid" should_not_make_empty_field_if_position_is_invalid
+        ],
+        testGroup "Make Mower" [
+            testCase "should_make_mower_if_position_is_valid" should_make_mower_if_position_is_valid,
+            testCase "should_not_make_mower_if_position_is_invalid" should_not_make_mower_if_position_is_invalid
+        ],
+        testGroup "Make Player" [
+            testCase "should_make_player_if_commands_are_all_defined" should_make_player_if_commands_are_all_defined
+        ],
+        testGroup "Create commands and directions" [
+            testCase "should_transform_valid_string_to_commands" should_transform_valid_string_to_commands,
+            testCase "should_not_transform_invalid_string_to_commands" should_not_transform_invalid_string_to_commands,
+            testCase "should_transform_valid_string_to_directions" should_transform_valid_string_to_directions,
+            testCase "should_not_transform_invalid_string_to_directions" should_not_transform_invalid_string_to_directions
+        ],
         testGroup "Turn right" [
             testCase "should_face_the_east_after_turn_right_when_facing_north" should_face_the_east_after_turn_right_when_facing_north,
             testCase "should_face_the_south_after_turn_right_when_facing_east" should_face_the_south_after_turn_right_when_facing_east,
             testCase "should_face_the_west_after_turn_right_when_facing_south" should_face_the_west_after_turn_right_when_facing_south,
             testCase "should_face_the_north_after_turn_right_when_facing_west" should_face_the_north_after_turn_right_when_facing_west
-         ],
+        ],
         testGroup "Turn left" [
             testCase "should_face_the_west_after_turn_left_when_facing_north" should_face_the_west_after_turn_left_when_facing_north,
             testCase "should_face_the_north_after_turn_left_when_facing_east" should_face_the_north_after_turn_left_when_facing_east,
             testCase "should_face_the_east_after_turn_left_when_facing_south" should_face_the_east_after_turn_left_when_facing_south,
             testCase "should_face_the_south_after_turn_left_when_facing_west" should_face_the_south_after_turn_left_when_facing_west
-         ],
+        ],
         testGroup "Forward" [
         	testCase "should_forward_to_the_north" should_forward_to_the_north,
         	testCase "should_forward_to_the_east" should_forward_to_the_east,
         	testCase "should_forward_to_the_south" should_forward_to_the_south,
         	testCase "should_forward_to_the_west" should_forward_to_the_west
-         ],
-         testGroup "Make Position" [
-         	testCase "should_make_position_with_positive_value" should_make_position_with_positive_value,
-         	testCase "should_not_make_position_with_negative_x" should_not_make_position_with_negative_x,
-         	testCase "should_not_make_position_with_negative_y" should_not_make_position_with_negative_y,
-         	testCase "should_not_make_position_with_negative_x_and_y" should_not_make_position_with_negative_x_and_y
-         ],
-         testGroup "Forward if valid position" [
+        ],
+        testGroup "Forward if valid position" [
          	testCase "should_forward_if_target_position_is_valid" should_forward_if_target_position_is_valid,
          	testCase "should_not_forward_if_target_position_is_outside_the_field" should_not_forward_if_target_position_is_outside_the_field,
          	testCase "should_not_forward_if_target_position_is_occupied" should_not_forward_if_target_position_is_occupied
-         ],
-         testGroup "Create commands and directions" [
-         	testCase "should_transform_valid_string_to_commands" should_transform_valid_string_to_commands,
-         	testCase "should_not_transform_invalid_string_to_commands" should_not_transform_invalid_string_to_commands,
-         	testCase "should_transform_valid_string_to_directions" should_transform_valid_string_to_directions,
-         	testCase "should_not_transform_invalid_string_to_directions" should_not_transform_invalid_string_to_directions
-         ],
-         testGroup "Parser" [
+        ],
+        testGroup "Parser" [
          	testCase "should_parse_valid_field" should_parse_valid_field,
          	testCase "should_parse_valid_player" should_parse_valid_player,
          	testCase "should_not_parse_invalid_field" should_not_parse_invalid_field,
          	testCase "should_not_parse_invalid_player" should_not_parse_invalid_player
-         ],
-         testGroup "Compute command" [
+        ],
+        testGroup "Compute command" [
          	testCase "should_forward_if_command_is_F" should_forward_if_command_is_F,
          	testCase "should_turn_left_if_command_is_L" should_turn_left_if_command_is_L,
          	testCase "should_turn_right_if_command_is_R" should_turn_right_if_command_is_R
-         ],
-         testGroup "computeCommands" [
+        ],
+        testGroup "computeCommands" [
          	testCase "should_go_back_at_the_same_place_when_execute_return" should_go_back_at_the_same_place_when_execute_return,
          	testCase "should_go_back_at_the_same_place_when_execute_square_commands" should_go_back_at_the_same_place_when_execute_square_commands
          ]
@@ -141,15 +152,27 @@ should_go_back_at_the_same_place_when_execute_square_commands = do
 	let mower = execState state (fromJust $ makeMower 2 2 North)
 	mower @?= fromJust (makeMower 2 2 North)
 
+--------------------------------------------------------------------------------
 
+should_make_empty_field_if_position_is_valid = makeEmptyField 2 2 @?= Just (Field (Position (2, 2)) [])
 
+should_not_make_empty_field_if_position_is_invalid = do
+    makeEmptyField (-1) 4 @?= Nothing
+    makeEmptyField 0 (-4) @?= Nothing
 
+--------------------------------------------------------------------------------
 
+should_make_mower_if_position_is_valid = makeMower 1 5 North @?= Just ( Mower (Position (1, 5)) North )
 
+should_not_make_mower_if_position_is_invalid = do
+    makeMower (-5) 0 South @?= Nothing
+    makeMower 65 (-2) West @?= Nothing 
 
+--------------------------------------------------------------------------------
 
-
-
+should_make_player_if_commands_are_all_defined = do
+    let m = fromJust (makeMower 1 2 North)
+    makePlayer m (makeCommands "AGD") @?= Just ( (Player m) [F, L, R] )
 
 
 
