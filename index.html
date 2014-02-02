@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="fr">
+	<head>
+  		<meta charset="utf-8">
+  		<title>Mower Haskell</title>
+	</head>
+	<body>
+		<h1>Mower Haskell</h1>
+		<fieldset>
+			<legend>But de l'exercice</legend>
+			<p>
+				Le but de cet exercice est de réaliser l'exercice de la tondeuse, en utilisant le langage Haskell, donc en étant confronté au paradigme purement fonctionnel.
+			</p>
+		</fieldset>
+		<p>
+			Le site <a href="http://www.haskell.org/hoogle/"/>Hoogle</a> est indispensable. Il documente toutes les fonctions de la librairie standard. La particularité de ce dictionnaire est qu'il permet des recherches par signature. Ainsi, il est possible de rechercher toutes les fonctions contenant la signature [a] -> a, par exemple.
+		</p>
+		<fieldset>
+			<legend>Cabal</legend>
+			<p>
+				Cabal est l'outil permettant d'automatiser la gestion des dépendances, le build des modules et du programme, et l'exécution des tests unitaires.
+				Il n'y a normalement rien à modifier dans la configuration du projet Cabal <i>(fichier mower.cabal)</i>.
+			</p>
+			<p>
+				Ces commandes te seront utiles :
+				<ul>
+					<li><i>cabal configure --enable-test</i></li>
+					<li><i>cabal build</i></li>
+				</ul>
+				L'exécutable se trouve alors dans le répertoire dist/build/Mower/, et se nomme <i>mower</i>. La commande <i>cabal build</i> doit être lancée après chaque modification de code, si tu souhaites exécuter le programme mower. La commande <i>cabal configure --enable-test</i> peut être exécuter une seule et unique fois au début.
+			</p>
+			<p>
+				Le projet mower-haskell est formé de trois composants :
+				<ul>
+					<li>Le module Mower.Core, dans lequel tu devras implémenter un ensemble de types et de fonctions</li>
+					<li>La fonction main, déjà implémentée, dans laquelle se trouve le code de l'exécutable, et qui utilise notamment le module Mower.Core</li>
+					<li>Les tests unitaires, déjà implémentés, t'aideront à l'implémentation du code</li>
+				</ul>
+			</p>
+		</fieldset>
+		<br />
+		<fieldset>
+			<legend>Maintenant, on code (sans effet de bord :)</legend>
+			<h2>Définition des types et valeurs</h2>
+			Le programme nécessite que tu définisse quelques types :
+			<ul>
+				<li>Les <b>position</b> sur un plan</li>
+				<li>Les <b>commandes</b> disponibles</li>
+				<li>Les <b>directions</b> disponibles</li>
+				<li>Les <b>tondeuses (Mower)</b>, constituées d'une position et d'une direction initiale</li>
+				<li>Le <b>terrain (Field)</b>, constitué d'une position (le coin haut droit), et d'une liste de tondeuse, pour la gestion des collisions</li>
+				<li>Les <b>joueurs (Player)</b>, constitué d'une tondeuse et d'une liste de commandes</li>
+				<li>Une <b>configuration de jeu (Board)</b> constitué d'un champs et d'une liste de joueurs</li>
+			</ul>
+		</fieldset>
+	</body>
+</html>
