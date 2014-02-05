@@ -25,6 +25,7 @@ module Mower.Core (
     , makePlayer
     , makeCommands
     , makePosition
+    , isValidPosition
     ) where
 
 import System.IO()
@@ -69,24 +70,6 @@ makePosition x y
 	| y < 0 = Nothing
 	| otherwise = Just $ Position (x, y)
 
-makeEmptyField :: Int -> Int -> Maybe Field
-makeEmptyField x y = 
-	case makePosition x y of
-		Nothing -> Nothing
-		Just p -> Just (Field p [])
-
-makeMower :: Int -> Int -> Direction -> Maybe Mower
-makeMower x y direction =
-	case makePosition x y of
-		Nothing -> Nothing
-		Just position -> Just (Mower position direction)
-
-makePlayer :: Mower -> [Maybe Command] -> Maybe Player
-makePlayer mower commands =
-	case sequence commands of
-		Nothing -> Nothing
-		Just cs -> Just (Player mower cs)
-
 toCommand :: Char -> Maybe Command
 toCommand 'G' = Just L
 toCommand 'D' = Just R
@@ -95,6 +78,30 @@ toCommand _ = Nothing
 
 makeCommands :: String -> [Maybe Command]
 makeCommands = map toCommand
+
+makeEmptyField :: Int -> Int -> Maybe Field
+makeEmptyField x y = do
+	p <- makePosition x y
+	return $ Field p []
+
+makeMower :: Int -> Int -> Direction -> Maybe Mower
+makeMower x y direction = do
+	p <- makePosition x y
+	return $ Mower p direction
+
+makePlayer :: Mower -> [Maybe Command] -> Maybe Player
+makePlayer mower commands = do
+	c <- sequence commands
+	return (Player mower c)
+
+toDirection :: Char -> Maybe Direction
+toDirection 'N' = Just North
+toDirection 'W' = Just West
+toDirection 'S' = Just South
+toDirection 'E' = Just East
+toDirection _ = Nothing
+
+--
 
 turnLeft :: Mower -> Mower
 turnLeft (Mower pos North) = Mower pos West
@@ -110,13 +117,6 @@ forward (Mower pos East) = Mower pos' East where pos' = mappend pos (Position (0
 forward (Mower pos South) = Mower pos' South where pos' = mappend pos (Position (-1, 0))
 forward (Mower pos West) = Mower pos' West where pos' = mappend pos (Position (0, -1))
 
--- Monoid handling
-forwardIfTargetPositionIsValid :: Field -> Mower -> Mower
-forwardIfTargetPositionIsValid f m = do
-	let m' = forward m
-	let p' = position m'
-	if isValidPosition p' f then m' else m
-
 -- Guards
 isValidPosition :: Position -> Field -> Bool
 isValidPosition pos@(Position (x, y)) f@(Field _ mowers)
@@ -127,12 +127,11 @@ isValidPosition pos@(Position (x, y)) f@(Field _ mowers)
 	| otherwise = True
 	where pos' = corner f
 
-toDirection :: Char -> Maybe Direction
-toDirection 'N' = Just North
-toDirection 'W' = Just West
-toDirection 'S' = Just South
-toDirection 'E' = Just East
-toDirection _ = Nothing
+forwardIfTargetPositionIsValid :: Field -> Mower -> Mower
+forwardIfTargetPositionIsValid f m = do
+	let m' = forward m
+	let p' = position m'
+	if isValidPosition p' f then m' else m
 
 computeCommand :: Command -> Field -> Mower -> Mower
 computeCommand c f
@@ -145,6 +144,8 @@ computeCommand c f
 computeCommands :: [Command] -> Field -> State Mower ()
 computeCommands [] _ = state ( \m -> ((), m) )
 computeCommands (c:xc) f = state ( \m -> ((), computeCommand c f m) ) >> ( computeCommands xc f )
+
+--
 
 -- State Monad
 playGame :: [Player] -> State Field ()
