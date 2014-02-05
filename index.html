@@ -87,7 +87,7 @@
 				En plus de ça, il faut :
 				<ul>
 					<li>Les <code>Mower</code> soient affichables sous la forme "Mower @ (x, y) facing D", avec x et y les coordonées de sa position, et D sa direction</li>
-					<li>Les <code>Position</code> soient affichables sous la forme "(x, y)", soient un Monoide, et soient ordonnable</li>
+					<li>Les <code>Position</code> soient affichables sous la forme "(x, y)", soient un Monoide, et soient ordonnables</li>
 				</ul>
 			</p>
 			<h2>Définition des fonctions</h2>
@@ -97,19 +97,60 @@
 				1. <code>makePosition</code>, qui prend en entrée deux entiers x et y, et qui retourne une position seulement si les entiers sont positifs.
 			</p>
 			<p>
-				2. <code>makeEmptyField</code>, qui prend en entrée deux entiers x et y, et qui retourne un terrain vide de tondeuse, seulement si la position à x, y est correcte.
+				2. <code>toCommand</code>, qui prend en entrée un caractère et retourne la commande associée.
 			</p>
 			<p>
-				3. <code>makeMower</code>, qui prend en entrée deux entiers x et y, et une direction, et qui retourne une tondeuse à la position et direction indiqué, seulement si la position est valide.
+				3. <code>makeCommands</code>, qui prend en entrée une chaine de caractères et retourne une liste de <code>potentielles commandes.</code>
 			</p>
 			<p>
-				4. <code>makePlayer</code>, qui prend en entrée une tondeuse et une liste de <code>commandes potentielles</code> et retourne un Player si les commandes sont définies.
+				4. <code>makeEmptyField</code>, qui prend en entrée deux entiers x et y, et qui retourne un terrain vide de tondeuse, seulement si la position à x, y est correcte.
 			</p>
 			<p>
-				5. <code>toCommand</code>, qui prend en entrée un caractère et retourne la commande associée.
+				5. <code>makeMower</code>, qui prend en entrée deux entiers x et y, et une direction, et qui retourne une tondeuse à la position et direction indiqué, seulement si la position est valide.
 			</p>
 			<p>
-				6. <code>makeCommands</code>, qui prend en entrée une chaine de caractères et retourne une liste de <code>potentielles commandes.</code>
+				6. <code>makePlayer</code>, qui prend en entrée une tondeuse et une liste de <code>commandes potentielles</code> et retourne un Player si les commandes sont définies.
+			</p>
+			<p>
+				7. <code>toDirection</code>, qui prend en entrée un caractère et retourne la direction associée.
+			</p>
+			<p>
+				La fonction de création du Board sera implémentée plus tard, car celle-ci nécessite une gestion d'état.
+			</p>
+
+			<h3>Execution des commandes</h3>
+			Ecrire les fonctions suivantes :
+			<p>
+				1. <code>turnLeft</code>, qui prend en entrée une tondeuse, et retourne une tondeuse avec la direction qui convient.
+			</p>
+			<p>
+				2. <code>turnRight</code>, qui prend en entrée une tondeuse, et retourne une tondeuse avec la direction qui convient.
+			</p>
+			<p>
+				3. <code>forward</code>, qui prend en entrée une tondeuse, et retourne une tondeuse avec la position qui convient.
+				<span style="color: red;"><b>HINT : N'oubliez pas que Position est un monoide...</b></span>
+			</p>
+			<p>
+				4. <code>isValidPosition</code>, qui prend en entrée une position et un Field, et retourne un booléen. La position est considérée valide, si elle est dans le Field, et que la position n'est pas déjà occupée par une tondeuse.
+			</p>
+			<p>
+				5. <code>forwardIfTargetPositionIsValid</code>, qui prend en entrée un Field et une tondeuse, et retourne une tondeuse à l'emplacement cible, ou au même emplacement.
+			</p>
+			<p>
+				6. <code>computeCommand</code>, qui prend en entrée une commande, un field et une tondeuse, et retourne une tondeuse sur laquelle a été exécutée la commande.
+			</p>
+			<p>
+				7. <code>computeCommands</code>, qui prend en entrée une liste de commandes et un Field, et retourne une monade State qui pour une tondeuse en entrée :
+				<ul>
+					<li>
+						<b>s'il n'y a pas de commandes à exécuter :</b> ne retourne pas de valeur, et retourne la même tondeuse en guise d'état
+					</li>
+					<li>
+						<b>sinon :</b> ne retourne pas de valeur, et retourne une tondeuse après l'exécution de la commande en guise d'état
+					</li>
+				</ul>
+				Je te laisse deviner comment exécuter la suite des commandes !
+				<span style="color: red;"><b>HINT : Rapelle toi que c'est une monade...</b></span>
 			</p>
 		</fieldset>
 	</body>
