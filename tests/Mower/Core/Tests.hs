@@ -146,9 +146,14 @@ should_not_make_mower_if_position_is_invalid = do
 
 --------------------------------------------------------------------------------
 
-should_make_player_if_commands_are_all_defined = do
-    let m = fromJust (makeMower 1 2 North)
-    makePlayer m (fromJust $ makeCommands "AGD") @?= Just ( (Player m) [F, L, R] )
+should_make_player_if_commands_are_all_defined =
+    let p = do
+        m <- makeMower 1 2 North
+        c <- makeCommands "AGD"
+        makePlayer m c
+    in p @?= do
+        m <- makeMower 1 2 North
+        return $ Player m [F, L, R]
 
 should_not_make_player_if_commands_are_not_all_defined =
     let p = do
