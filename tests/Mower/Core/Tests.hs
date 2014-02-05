@@ -190,20 +190,27 @@ should_create_commands_according_to_the_commands_sequence = do
 --------------------------------------------------------------------------------
 
 should_return_true_if_the_position_is_in_the_field_and_empty =
-    let valid = do
+    let r = do
         f <- makeEmptyField 5 5
         p <- makePosition 1 1
         return $ isValidPosition p f
-    in valid @?= return True
+    in r @?= return True
 
 should_return_false_if_the_position_is_not_in_the_field =
-    let valid = do
+    let r = do
         f <- makeEmptyField 4 4
         p <- makePosition 5 5
         return $ isValidPosition p f
-    in valid @?= return False
+    in r @?= return False
 
-should_return_false_if_the_position_is_in_the_field_but_not_empty = isValidPosition (fromJust $ makePosition 1 1) ( Field (fromJust $ makePosition 5 5) [Mower (Position (1, 1)) North]) @?= False
+should_return_false_if_the_position_is_in_the_field_but_not_empty =
+    let r = do
+        p <- makePosition 1 1
+        p' <- makePosition 5 5
+        m <- makeMower 1 1 North
+        f <- return $ Field p' [m]
+        return $ isValidPosition p f
+    in r @?= return False
 
 --------------------------------------------------------------------------------
 
