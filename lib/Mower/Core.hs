@@ -76,8 +76,8 @@ toCommand 'D' = Just R
 toCommand 'A' = Just F
 toCommand _ = Nothing
 
-makeCommands :: String -> [Maybe Command]
-makeCommands = map toCommand
+makeCommands :: String -> Maybe [Command]
+makeCommands = sequence . (map toCommand)
 
 makeEmptyField :: Int -> Int -> Maybe Field
 makeEmptyField x y = do
@@ -89,10 +89,8 @@ makeMower x y direction = do
 	p <- makePosition x y
 	return $ Mower p direction
 
-makePlayer :: Mower -> [Maybe Command] -> Maybe Player
-makePlayer mower commands = do
-	c <- sequence commands
-	return (Player mower c)
+makePlayer :: Mower -> [Command] -> Maybe Player
+makePlayer mower commands = return (Player mower commands)
 
 toDirection :: Char -> Maybe Direction
 toDirection 'N' = Just North
@@ -197,7 +195,10 @@ playerParser = do
 		Nothing -> return Nothing
 		Just direction -> case makeMower (read x :: Int) (read y :: Int) direction of
 			Nothing -> return Nothing
-			Just m -> return $ makePlayer m ( makeCommands cs )
+			Just m -> return p
+				where p = do
+					c <- makeCommands cs
+					makePlayer m c
 	
 fieldParser :: Parser (Maybe Field)
 fieldParser = do

@@ -148,11 +148,14 @@ should_not_make_mower_if_position_is_invalid = do
 
 should_make_player_if_commands_are_all_defined = do
     let m = fromJust (makeMower 1 2 North)
-    makePlayer m (makeCommands "AGD") @?= Just ( (Player m) [F, L, R] )
+    makePlayer m (fromJust $ makeCommands "AGD") @?= Just ( (Player m) [F, L, R] )
 
-should_not_make_player_if_commands_are_not_all_defined = do
-    let m = fromJust (makeMower 1 2 North)
-    makePlayer m (makeCommands "AGE") @?= Nothing
+should_not_make_player_if_commands_are_not_all_defined =
+    let p = do
+        m <- makeMower 1 2 North
+        c <- makeCommands "AGE"
+        makePlayer m c
+    in p @?= Nothing
 
 --------------------------------------------------------------------------------
 
@@ -176,8 +179,8 @@ should_not_create_direction_if_char_is_invalid = toDirection 'F' @?= Nothing
 --------------------------------------------------------------------------------
 
 should_create_commands_according_to_the_commands_sequence = do
-    makeCommands "AGD" @?= [Just F, Just L, Just R]
-    makeCommands "AEGD" @?= [Just F, Nothing, Just L, Just R]
+    makeCommands "AGD" @?= Just [F, L, R]
+    makeCommands "AEGD" @?= Nothing
 
 --------------------------------------------------------------------------------
 
