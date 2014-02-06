@@ -24,6 +24,9 @@ Library
     parsec
   exposed-modules:
     Mower.Core
+    Mower.Parser
+    Mower.Types
+    Mower.Factory
 
 executable mower
   hs-source-dirs:    src

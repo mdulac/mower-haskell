@@ -1,30 +1,14 @@
 {-# LANGUAGE TypeFamilies #-}
 
 module Mower.Core (
-      Position(..)
-    , Command(..)
-    , Direction(..)
-    , Mower(..)
-    , Field(..)
-    , Player(..)
-    , Board(..)
-    , turnLeft
+      turnLeft
     , turnRight
     , forward
     , forwardIfTargetPositionIsValid
-    , toDirection
-    , toCommand
     , computeCommand
     , computeCommands
     , playGame
     , makeBoard
-    , parseField
-    , parsePlayer
-    , makeEmptyField
-    , makeMower
-    , makePlayer
-    , makeCommands
-    , makePosition
     , isValidPosition
     ) where
 
@@ -33,73 +17,9 @@ import Data.Monoid
 import Data.List()
 import Data.Either()
 import Control.Monad.State
-
-import Text.Parsec hiding (State)
-import Text.Parsec.String (Parser)
-
-newtype Position = Position (Int, Int) deriving Eq
-
-data Command = L | R | F deriving (Show, Eq, Enum)
-data Direction = North | East | South | West deriving (Show, Eq, Enum)
-data Mower = Mower { position :: Position, direction :: Direction } deriving (Eq)
-data Field = Field { corner :: Position, mowers :: [Mower] } deriving (Show, Eq)
-data Player = Player { mower :: Mower, commands :: [Command] } deriving (Show, Eq)
-data Board = Board { field :: Field, players :: [Player] } deriving (Show, Eq)
-
-instance Show Mower where
-	show (Mower pos dir) = "Mower @ " ++ show pos ++ " facing " ++ show dir
-
-instance Show Position where
-	show (Position (x, y)) = "(" ++ show x ++ ", " ++ show y ++ ")"
-
--- Typeclass Monoid
-instance Monoid Position where
-	mempty = Position (0, 0)
-	mappend (Position (x, y)) (Position (x', y')) = Position (x + x', y + y')
-
--- Typeclass Eq
-instance Ord Position where
-	Position (x, y) < Position (x', y') = x < x' && y < y'
-	Position (x, y) > Position (x', y') = x > x' || y > y'
-
--- Factories
-
-makePosition :: Int -> Int -> Maybe Position
-makePosition x y
-	| x < 0 = Nothing
-	| y < 0 = Nothing
-	| otherwise = Just $ Position (x, y)
-
-toCommand :: Char -> Maybe Command
-toCommand 'G' = Just L
-toCommand 'D' = Just R
-toCommand 'A' = Just F
-toCommand _ = Nothing
-
-makeCommands :: String -> Maybe [Command]
-makeCommands = sequence . (map toCommand)
-
-makeEmptyField :: Int -> Int -> Maybe Field
-makeEmptyField x y = do
-	p <- makePosition x y
-	return $ Field p []
-
-makeMower :: Int -> Int -> Direction -> Maybe Mower
-makeMower x y direction = do
-	p <- makePosition x y
-	return $ Mower p direction
-
-makePlayer :: Mower -> [Command] -> Maybe Player
-makePlayer mower commands = return (Player mower commands)
-
-toDirection :: Char -> Maybe Direction
-toDirection 'N' = Just North
-toDirection 'W' = Just West
-toDirection 'S' = Just South
-toDirection 'E' = Just East
-toDirection _ = Nothing
-
---
+import Mower.Types
+import Mower.Factory()
+import Mower.Parser
 
 turnLeft :: Mower -> Mower
 turnLeft (Mower pos North) = Mower pos West
@@ -163,46 +83,3 @@ makeBoard ((_, l):ls) =
 	case parsePlayer l of
 		Nothing -> state ( \b -> ((), b) ) >> ( makeBoard ls )
 		Just p -> state ( \b -> ((), Board (field b) (p : (players b))) ) >> ( makeBoard ls )
-
-parseField :: String -> Maybe Field
-parseField line = do
-	let f = parse fieldParser "" line
-	case f of
-		Left _ -> Nothing
-		Right Nothing -> Nothing
-		Right field -> field
-
-parsePlayer :: String -> Maybe Player
-parsePlayer line = do
-	let p = parse playerParser "" line
-	case p of
-		Left _ -> Nothing
-		Right Nothing -> Nothing
-		Right player -> player
-
--- Parsers
-
-playerParser :: Parser (Maybe Player)
-playerParser = do
-	x <- many1 digit
-	_ <- space
-	y <- many1 digit
-	_ <- space
-	d <- oneOf "NESW"
-	_ <- space
-	cs <- many $ oneOf "GAD"
-	case toDirection d of
-		Nothing -> return Nothing
-		Just direction -> case makeMower (read x :: Int) (read y :: Int) direction of
-			Nothing -> return Nothing
-			Just m -> return p
-				where p = do
-					c <- makeCommands cs
-					makePlayer m c
-	
-fieldParser :: Parser (Maybe Field)
-fieldParser = do
-	x <- many1 digit
-	_ <- space
-	y <- many1 digit
-	return $ makeEmptyField (read x :: Int) (read y :: Int)

@@ -6,6 +6,9 @@ import Data.Maybe
 import Control.Monad.State
 
 import Mower.Core
+import Mower.Factory
+import Mower.Parser
+import Mower.Types
 
 -- Lazy eval
 withLineNumber :: [String] -> [(Int, String)]

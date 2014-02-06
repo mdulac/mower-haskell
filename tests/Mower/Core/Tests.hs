@@ -8,6 +8,9 @@ import Data.Maybe
 import Control.Monad.State
 
 import Mower.Core
+import Mower.Types
+import Mower.Factory
+import Mower.Parser
 
 tests :: Test
 tests = testGroup "Mower.Core.Tests" [
