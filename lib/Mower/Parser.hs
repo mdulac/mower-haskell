@@ -8,6 +8,15 @@ import Text.Parsec.String (Parser)
 import Mower.Types
 import Mower.Factory
 
+parseField :: String -> Maybe Field
+-- TODO
+
+parsePlayer :: String -> Maybe Player
+-- TODO
+
+
+-- Nothing to touch
+
 playerParser :: Parser (Maybe Player)
 playerParser = do
 	x <- many1 digit
@@ -32,19 +41,3 @@ fieldParser = do
 	_ <- space
 	y <- many1 digit
 	return $ makeEmptyField (read x :: Int) (read y :: Int)
-
-parseField :: String -> Maybe Field
-parseField line = do
-	let f = parse fieldParser "" line
-	case f of
-		Left _ -> Nothing
-		Right Nothing -> Nothing
-		Right field -> field
-
-parsePlayer :: String -> Maybe Player
-parsePlayer line = do
-	let p = parse playerParser "" line
-	case p of
-		Left _ -> Nothing
-		Right Nothing -> Nothing
-		Right player -> player
