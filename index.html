@@ -31,11 +31,14 @@
 				L'exécutable se trouve alors dans le répertoire dist/build/Mower/, et se nomme <i>mower</i>. La commande <i>cabal build</i> doit être lancée après chaque modification de code, si tu souhaites exécuter le programme mower. La commande <i>cabal configure --enable-test</i> peut être exécuter une seule et unique fois au début.
 			</p>
 			<p>
-				Le projet mower-haskell est formé de trois composants :
+				Le projet mower-haskell est formé de plusieurs composants :
 				<ul>
-					<li>Le module <code>Mower.Core</code>, dans lequel tu devras implémenter un ensemble de types et de fonctions</li>
+					<li>Le module <code>Mower.Types</code>, dans lequel se trouve les types (que tu devras définir)</li>
+					<li>Le module <code>Mower.Factory</code>, dans lequel se trouve les fonctions permettant de créer un ensemble de valeurs, en tenant compte de règles de validation (que tu devras implémenter)</li>
+					<li>Le module <code>Mower.Parser</code>, dans lequel se trouve les parser de fichier (il y a des choses à implémenter dedans aussi)</li>
+					<li>Le module <code>Mower.Core</code>, dans lequel tu devras implémenter un ensemble fonctions</li>
 					<li>La fonction <code>main</code>, déjà implémentée, dans laquelle se trouve le code de l'exécutable, et qui utilise notamment le module <code>Mower.Core</code></li>
-					<li>Les tests unitaires, déjà implémentés, t'aideront à l'implémentation du code</li>
+					<li>Les tests unitaires, déjà implémentés pour la plupart, t'aideront à l'implémentation du code</li>
 				</ul>
 			</p>
 		</fieldset>

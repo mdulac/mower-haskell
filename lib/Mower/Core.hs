@@ -63,8 +63,6 @@ computeCommands :: [Command] -> Field -> State Mower ()
 computeCommands [] _ = state ( \m -> ((), m) )
 computeCommands (c:xc) f = state ( \m -> ((), computeCommand c f m) ) >> ( computeCommands xc f )
 
---
-
 -- State Monad
 playGame :: [Player] -> State Field ()
 playGame [] = state ( \f -> ((), f) )
