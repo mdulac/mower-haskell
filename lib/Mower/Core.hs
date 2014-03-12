@@ -22,28 +22,28 @@ import Mower.Factory()
 import Mower.Parser
 
 turnLeft :: Mower -> Mower
--- TODO
+turnLeft = undefined
 
 turnRight :: Mower -> Mower
--- TODO
+turnRight = undefined
 
 forward :: Mower -> Mower
--- TODO
+forward = undefined
 
 isValidPosition :: Position -> Field -> Bool
--- TODO
+isValidPosition = undefined
 
 forwardIfTargetPositionIsValid :: Field -> Mower -> Mower
--- TODO
+forwardIfTargetPositionIsValid = undefined
 
 computeCommand :: Command -> Field -> Mower -> Mower
--- TODO
+computeCommand = undefined
 
 computeCommands :: [Command] -> Field -> State Mower ()
--- TODO
+computeCommands = undefined
 
 playGame :: [Player] -> State Field ()
--- TODO
+playGame = undefined
 
 makeBoard :: [(Int, String)] -> State Board ()
--- TODO
+makeBoard  = undefined

@@ -11,22 +11,22 @@ module Mower.Factory (
 import Mower.Types
 
 makePosition :: Int -> Int -> Maybe Position
--- TODO
+makePosition = undefined
 
 toCommand :: Char -> Maybe Command
--- TODO
+toCommand = undefined
 
 makeCommands :: String -> Maybe [Command]
--- TODO
+makeCommands = undefined
 
 makeEmptyField :: Int -> Int -> Maybe Field
--- TODO
+makeEmptyField = undefined
 
 makeMower :: Int -> Int -> Direction -> Maybe Mower
--- TODO
+makeMower = undefined
 
 makePlayer :: Mower -> [Command] -> Maybe Player
--- TODO
+makePlayer = undefined
 
 toDirection :: Char -> Maybe Direction
--- TODO
+toDirection = undefined

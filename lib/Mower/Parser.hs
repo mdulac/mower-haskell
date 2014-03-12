@@ -9,10 +9,10 @@ import Mower.Types
 import Mower.Factory
 
 parseField :: String -> Maybe Field
--- TODO
+parseField = undefined
 
 parsePlayer :: String -> Maybe Player
--- TODO
+parsePlayer = undefined
 
 
 -- Nothing to touch

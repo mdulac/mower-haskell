@@ -11,23 +11,27 @@ module Mower.Types (
 import Data.List()
 import Data.Monoid
 
-newtype Position = -- TODO
+newtype Position = Position (Int, Int) deriving Eq
 
-data Command = -- TODO
-data Direction = -- TODO
-data Mower = -- TODO
-data Field = -- TODO
-data Player = -- TODO
-data Board = -- TODO
-
-instance Show Position where
--- TODO
+data Command = L | R | F deriving (Show, Eq, Enum)
+data Direction = North | East | South | West deriving (Show, Eq, Enum)
+data Mower = Mower { position :: Position, direction :: Direction } deriving (Eq)
+data Field = Field { corner :: Position, mowers :: [Mower] } deriving (Show, Eq)
+data Player = Player { mower :: Mower, commands :: [Command] } deriving (Show, Eq)
+data Board = Board { field :: Field, players :: [Player] } deriving (Show, Eq)
 
 instance Show Mower where
--- TODO
+	show (Mower pos dir) = undefined
 
+instance Show Position where
+	show (Position (x, y)) = undefined
+
+-- Typeclass Monoid
 instance Monoid Position where
--- TODO
+	mempty = undefined
+	mappend (Position (x, y)) (Position (x', y')) = undefined
 
+-- Typeclass Eq
 instance Ord Position where
--- TODO
+	Position (x, y) < Position (x', y') = undefined
+	Position (x, y) > Position (x', y') = undefined
