@@ -93,7 +93,7 @@ tests = testGroup "Mower.Core.Tests" [
 
 --------------------------------------------------------------------------------
 
-should_show_simple_mower = show (makeMower 5 10 North) @?= "Mower @ (5, 10) facing North"
+should_show_simple_mower = (show . fromJust) (makeMower 5 10 North) @?= "Mower @ (5, 10) facing North"
 
 --------------------------------------------------------------------------------
 
