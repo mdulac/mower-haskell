@@ -14,8 +14,14 @@ import Mower.Parser
 
 tests :: Test
 tests = testGroup "Mower.Core.Tests" [
-        testGroup "show" [
-            testCase "should_show_simple_mower" should_show_simple_mower
+        testGroup "typeclass" [
+            testCase "should_show_simple_mower" should_show_simple_mower,
+            testCase "should_show_simple_position" should_show_simple_position,
+            testCase "should_compare_greater_position_1" should_compare_greater_position_1,
+            testCase "should_compare_greater_position_2" should_compare_greater_position_2,
+            testCase "should_compare_greater_position_3" should_compare_greater_position_3,
+            testCase "should_compare_lower_position_1" should_compare_lower_position_1,
+            testCase "should_compare_lower_position_2" should_compare_lower_position_2
         ],
         testGroup "makePosition" [
             testCase "should_make_position_with_positive_value" should_make_position_with_positive_value,
@@ -94,6 +100,12 @@ tests = testGroup "Mower.Core.Tests" [
 --------------------------------------------------------------------------------
 
 should_show_simple_mower = (show . fromJust) (makeMower 5 10 North) @?= "Mower @ (5, 10) facing North"
+should_show_simple_position = (show . fromJust) (makePosition 5 10) @?= "(5, 10)"
+should_compare_greater_position_1 = fromJust (makePosition 5 5) > fromJust (makePosition 2 2) @?= True
+should_compare_greater_position_2 = fromJust (makePosition 3 8) > fromJust (makePosition 5 7) @?= True
+should_compare_greater_position_3 = fromJust (makePosition 3 8) > fromJust (makePosition 4 10) @?= False
+should_compare_lower_position_1 = fromJust (makePosition 2 6) < fromJust (makePosition 3 8) @?= True
+should_compare_lower_position_2 = fromJust (makePosition 4 6) < fromJust (makePosition 3 8) @?= False
 
 --------------------------------------------------------------------------------
 
