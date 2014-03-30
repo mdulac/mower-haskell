@@ -14,7 +14,9 @@ import Mower.Parser
 
 tests :: Test
 tests = testGroup "Mower.Core.Tests" [
-
+        testGroup "show" [
+            testCase "should_show_simple_mower" should_show_simple_mower
+        ],
         testGroup "makePosition" [
             testCase "should_make_position_with_positive_value" should_make_position_with_positive_value,
             testCase "should_not_make_position_with_negative_x" should_not_make_position_with_negative_x,
@@ -88,6 +90,10 @@ tests = testGroup "Mower.Core.Tests" [
          	testCase "should_not_parse_invalid_player" should_not_parse_invalid_player
         ]
     ]
+
+--------------------------------------------------------------------------------
+
+should_show_simple_mower = show (makeMower 5 10 North) @?= "Mower @ (5, 10) facing North"
 
 --------------------------------------------------------------------------------
 
