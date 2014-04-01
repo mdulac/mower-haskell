@@ -121,26 +121,26 @@
 			<h3>Execution des commandes</h3>
 			Ecrire les fonctions suivantes :
 			<p>
-				1. <code>turnLeft</code>, qui prend en entrée une tondeuse, et retourne une tondeuse avec la direction qui convient.
+				1. <code>turnLeft</code>, qui retourne une tondeuse avec la direction qui convient.
 			</p>
 			<p>
-				2. <code>turnRight</code>, qui prend en entrée une tondeuse, et retourne une tondeuse avec la direction qui convient.
+				2. <code>turnRight</code>, qui retourne une tondeuse avec la direction qui convient.
 			</p>
 			<p>
-				3. <code>forward</code>, qui prend en entrée une tondeuse, et retourne une tondeuse avec la position qui convient.
+				3. <code>forward</code>, qui retourne une tondeuse avec la position qui convient.
 				<span style="color: red;"><b>HINT : N'oubliez pas que Position est un monoide...</b></span>
 			</p>
 			<p>
-				4. <code>isValidPosition</code>, qui prend en entrée une position et un Field, et retourne un booléen. La position est considérée valide, si elle est dans le Field, et que la position n'est pas déjà occupée par une tondeuse.
+				4. <code>isValidPosition</code>, qui retourne un booléen. La position est considérée valide, si elle est dans le Field, et que la position n'est pas déjà occupée par une tondeuse.
 			</p>
 			<p>
-				5. <code>forwardIfTargetPositionIsValid</code>, qui prend en entrée un Field et une tondeuse, et retourne une tondeuse à l'emplacement cible, ou au même emplacement.
+				5. <code>forwardIfTargetPositionIsValid</code>, qui retourne une tondeuse à l'emplacement cible, ou au même emplacement.
 			</p>
 			<p>
-				6. <code>computeCommand</code>, qui prend en entrée une commande, un field et une tondeuse, et retourne une tondeuse sur laquelle a été exécutée la commande.
+				6. <code>computeCommand</code>, qui retourne une tondeuse sur laquelle a été exécutée la commande.
 			</p>
 			<p>
-				7. <code>computeCommands</code>, qui prend en entrée une liste de commandes et un Field, et retourne une monade State qui pour une tondeuse en entrée :
+				7. <code>computeCommands</code>, qui retourne une monade State qui pour une tondeuse en entrée :
 				<ul>
 					<li>
 						<b>s'il n'y a pas de commandes à exécuter :</b> ne retourne pas de valeur, et retourne la même tondeuse en guise d'état
@@ -151,6 +151,15 @@
 				</ul>
 				Je te laisse deviner comment exécuter la suite des commandes !
 				<span style="color: red;"><b>HINT : Rapelle toi que c'est une monade...</b></span>
+			</p>
+
+			<h3>Un dernier effort...</h3>
+			Implémenter les fonctions suivantes :
+			<p>
+				1. <code>makeBoard</code>, cette fonction permet de construire le terrain de jeu. En utilisant la State Monad, compose la création du Board ;)
+			</p>
+			<p>
+				2. <code>playGame</code>, exécute l'ensemble des commandes pour chacun des players.
 			</p>
 		</fieldset>
 	</body>
